@@ -13,16 +13,31 @@ import {
 } from "./utils/api";
 import "./App.css";
 
+type SeatNumber = number;
+
+interface Reservation {
+  reservationId: string;
+  expiresInSeconds: number;
+}
+
+interface BookingStatus {
+  status: string;
+  message: string;
+  seatNumbers: SeatNumber[];
+}
+
 function App() {
   const [userId, setUserIdState] = useState("");
-  const [selectedEventId, setSelectedEventId] = useState(null);
-  const [selectedSeats, setSelectedSeats] = useState([]);
-  const [reservation, setReservation] = useState(null);
-  const [bookingStatus, setBookingStatus] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<SeatNumber[]>([]);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
+  const [bookingStatus, setBookingStatus] = useState<BookingStatus | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [showUserInput, setShowUserInput] = useState(true);
-  const [userReservations, setUserReservations] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [, setShowUserInput] = useState(true);
+  const [userReservations, setUserReservations] = useState<unknown[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(false);
 
   // Initialize user ID from localStorage or generate new one
@@ -63,13 +78,16 @@ function App() {
     return () => clearInterval(interval);
   }, [userId]);
 
-  const handleSelectEvent = (eventId) => {
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    err instanceof Error ? err.message : fallback;
+
+  const handleSelectEvent = (eventId: string) => {
     setSelectedEventId(eventId);
     setSelectedSeats([]);
     setError(null);
   };
 
-  const handleSeatSelect = (seatNumber) => {
+  const handleSeatSelect = (seatNumber: SeatNumber) => {
     setSelectedSeats((prev) => {
       if (prev.includes(seatNumber)) {
         return prev.filter((s) => s !== seatNumber);
@@ -109,7 +127,7 @@ function App() {
         setError(response.message || "Failed to reserve seats");
       }
     } catch (err) {
-      setError(err.message || "Error reserving seats");
+      setError(getErrorMessage(err, "Error reserving seats"));
     } finally {
       setLoading(false);
     }
@@ -146,7 +164,7 @@ function App() {
         setError(response.message || "Failed to confirm booking");
       }
     } catch (err) {
-      setError(err.message || "Error confirming booking");
+      setError(getErrorMessage(err, "Error confirming booking"));
     } finally {
       setLoading(false);
     }
@@ -166,13 +184,13 @@ function App() {
         setUserReservations(response.data);
       }
     } catch (err) {
-      setError(err.message || "Error cancelling reservation");
+      setError(getErrorMessage(err, "Error cancelling reservation"));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelReservationDetails = async (reservationId) => {
+  const handleCancelReservationDetails = async (reservationId: string) => {
     setLoading(true);
     try {
       await cancelReservation(reservationId, userId);
@@ -183,7 +201,7 @@ function App() {
       }
       setError(null);
     } catch (err) {
-      setError(err.message || "Error cancelling reservation");
+      setError(getErrorMessage(err, "Error cancelling reservation"));
     } finally {
       setLoading(false);
     }

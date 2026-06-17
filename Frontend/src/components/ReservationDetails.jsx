@@ -6,7 +6,6 @@ export const ReservationDetails = ({
   userId,
   reservations,
   isLoading,
-  onCancel,
   onCancelReservation,
   error,
 }) => {
